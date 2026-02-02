@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: core-bank
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+# Security Configuration
+# JWT_SIGNER_KEY must be set as environment variable in production
+# Key must be at least 256 bits (32 bytes) for HS256
+jwt:
+  signer:
+    key: d84a6eeae9dce910be0dcc4eedfc056f3711afeff6cde614578d262b519d42a6

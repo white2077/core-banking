@@ -1,0 +1,54 @@
+#!/bin/sh
+# Pre-commit hook - chạy Spotless và PMD check trước khi commit
+
+echo "🔍 Running Spotless check..."
+
+# Chạy spotless:check
+./mvnw spotless:check -q
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "❌ Code format check FAILED!"
+    echo ""
+    echo "Run './mvnw spotless:apply' to auto-fix formatting issues."
+    echo ""
+    exit 1
+fi
+
+echo "✅ Spotless check passed!"
+echo ""
+echo "🔍 Running PMD check..."
+
+# Chạy pmd:check
+./mvnw pmd:check -q
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "❌ PMD check FAILED!"
+    echo ""
+    echo "Fix the code quality issues reported above."
+    echo ""
+    exit 1
+fi
+
+echo "✅ PMD check passed!"
+echo ""
+echo "🔍 Running CPD (Copy-Paste Detector)..."
+
+# Chạy cpd:check
+./mvnw pmd:cpd-check -q
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "❌ CPD check FAILED! Duplicate code detected."
+    echo ""
+    echo "Fix the duplicate code issues reported above."
+    echo ""
+    exit 1
+fi
+
+echo "✅ CPD check passed!"
+echo ""
+echo "🎉 All checks passed! Commit allowed."
+exit 0
+

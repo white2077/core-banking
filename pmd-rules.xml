@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<ruleset name="Core Bank Rules">
+
+    <description>PMD Rules cho Core Bank Project</description>
+
+    <exclude-pattern>.*/entity/.*</exclude-pattern>
+    <exclude-pattern>.*/dto/.*</exclude-pattern>
+    <exclude-pattern>.*/enums/.*</exclude-pattern>
+
+    <!-- ==================== CODE STYLE ==================== -->
+    <rule ref="category/java/codestyle.xml/ExtendsObject"/>
+    <rule ref="category/java/codestyle.xml/ForLoopShouldBeWhileLoop"/>
+    <rule ref="category/java/codestyle.xml/UnnecessaryReturn"/>
+    <!-- Thay thế EmptyIfStmt, EmptyWhileStmt, EmptyFinallyBlock, EmptySwitchStatements -->
+    <rule ref="category/java/codestyle.xml/EmptyControlStatement"/>
+
+    <!-- ==================== BEST PRACTICES ==================== -->
+    <rule ref="category/java/bestpractices.xml/UnusedLocalVariable"/>
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateMethod"/>
+    <rule ref="category/java/bestpractices.xml/AvoidReassigningParameters"/>
+    <rule ref="category/java/bestpractices.xml/MissingOverride"/>
+    <rule ref="category/java/bestpractices.xml/UseCollectionIsEmpty"/>
+
+    <!-- ==================== ERROR PRONE ==================== -->
+    <rule ref="category/java/errorprone.xml/EmptyCatchBlock">
+        <properties>
+            <property name="allowCommentedBlocks" value="true"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/errorprone.xml/JumbledIncrementer"/>
+    <rule ref="category/java/errorprone.xml/OverrideBothEqualsAndHashcode"/>
+    <rule ref="category/java/errorprone.xml/ReturnFromFinallyBlock"/>
+    <rule ref="category/java/errorprone.xml/UnconditionalIfStatement"/>
+
+    <!-- ==================== DESIGN ==================== -->
+    <!-- Thay thế ExcessiveMethodLength -->
+    <rule ref="category/java/design.xml/NcssCount">
+        <properties>
+            <property name="methodReportLevel" value="60"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/design.xml/ExcessiveParameterList">
+        <properties>
+            <property name="minimum" value="6"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/design.xml/TooManyFields">
+        <properties>
+            <property name="maxfields" value="20"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/design.xml/CyclomaticComplexity">
+        <properties>
+            <property name="methodReportLevel" value="15"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/design.xml/AvoidDeeplyNestedIfStmts">
+        <properties>
+            <property name="problemDepth" value="4"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/design.xml/SimplifyBooleanReturns"/>
+    <rule ref="category/java/design.xml/SimplifyBooleanExpressions"/>
+    <rule ref="category/java/design.xml/UselessOverridingMethod"/>
+
+    <!-- ==================== PERFORMANCE ==================== -->
+    <rule ref="category/java/performance.xml/StringInstantiation"/>
+    <rule ref="category/java/performance.xml/StringToString"/>
+    <rule ref="category/java/performance.xml/UseStringBufferForStringAppends"/>
+    <rule ref="category/java/performance.xml/InefficientStringBuffering"/>
+
+</ruleset>
