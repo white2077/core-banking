@@ -1,6 +1,8 @@
 package com.core.bank.demo.config.filter.header;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.UUID;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -12,28 +14,24 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.util.PathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.core.bank.demo.config.exception.ErrorCode;
 import com.core.bank.demo.contract.Response;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import lombok.RequiredArgsConstructor;
+
 @Order(Integer.MIN_VALUE)
 @Component
+@RequiredArgsConstructor
 public class RequestHeaderFilter extends OncePerRequestFilter {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-    private static String getRemoteAddress(HttpServletRequest request) {
-        String remoteAddress = "";
-        if (request != null) {
-            remoteAddress = request.getHeader("X-FORWARDED-FOR");
-            if (remoteAddress == null || remoteAddress.isEmpty()) {
-                remoteAddress = request.getRemoteAddr();
-            }
-        }
-        return remoteAddress;
-    }
+    private static final List<String> requestMatchers = List.of("/actuator/**", "/v2/**", "/v3/**",
+            "/swagger-ui.html**", "/swagger-ui/**", "/swagger-resources/**");
+    private final PathMatcher mvcPathMatcher;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -47,11 +45,14 @@ public class RequestHeaderFilter extends OncePerRequestFilter {
         ctx.setPath(path);
         ThreadContext.put("clientIp", clientIp);
         ThreadContext.put("path", path);
-
         String clientMessageId = request.getHeader(HeaderEnum.CLIENT_MESSAGE_ID.getLabel());
-        if (clientMessageId == null || clientMessageId.isEmpty()) {
-            sendHeaderValidationError(response, "Missing required header: " + HeaderEnum.CLIENT_MESSAGE_ID.getLabel());
-            return;
+
+        if (!validateIgnorePath(ctx, request)) {
+            if (clientMessageId == null || clientMessageId.isEmpty()) {
+                throwValidateHeaderError(response, request);
+                return;
+            }
+            ctx.setClientMessageId(clientMessageId);
         }
 
         ctx.setClientMessageId(clientMessageId);
@@ -62,10 +63,35 @@ public class RequestHeaderFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private void sendHeaderValidationError(HttpServletResponse response, String message) throws IOException {
-        response.setStatus(HttpStatus.BAD_REQUEST.value());
+    private boolean validateIgnorePath(RequestContext ctx, HttpServletRequest request) {
+        String requestPath = request.getRequestURI();
+
+        boolean ignorePath = requestMatchers.stream().anyMatch(pattern -> mvcPathMatcher.match(pattern, requestPath));
+
+        if (ignorePath) {
+            ctx.setClientMessageId(UUID.randomUUID().toString());
+            return true;
+        }
+
+        return false;
+    }
+
+    private static String getRemoteAddress(HttpServletRequest request) {
+        String remoteAddress = "";
+        if (request != null) {
+            remoteAddress = request.getHeader("X-FORWARDED-FOR");
+            if (remoteAddress == null || remoteAddress.isEmpty()) {
+                remoteAddress = request.getRemoteAddr();
+            }
+        }
+        return remoteAddress;
+    }
+
+    private void throwValidateHeaderError(HttpServletResponse response, HttpServletRequest request) throws IOException {
+        Response errorResponse = Response.error(ErrorCode.MISSING_HEADER, "Missing required header");
+        ObjectMapper objectMapper = new ObjectMapper();
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        Response errorResponse = Response.error(ErrorCode.MISSING_HEADER, message);
-        response.getWriter().write(OBJECT_MAPPER.writeValueAsString(errorResponse));
+        response.setStatus(HttpStatus.BAD_REQUEST.value());
+        response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
     }
 }
